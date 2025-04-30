@@ -48,4 +48,7 @@ Route::get('/reset-password/{token}', function ($token) {
     return view('auth.reset-password', ['token' => $token]);
 })->name('password.reset');
 
-Route::post('/check-startup-match', [InvestorController::class, 'checkStartupMatch']);
+Route::middleware(['auth:sanctum'])->post('/check-startup-match', [InvestorController::class, 'checkStartupMatch']);
+// In routes/api.php
+Route::middleware(['auth:sanctum'])->get('/investor/notifications', [InvestorController::class, 'getInvestorNotifications']);
+
