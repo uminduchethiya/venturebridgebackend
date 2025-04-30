@@ -73,30 +73,53 @@ class InvestorController extends Controller
 
     public function checkStartupMatch(Request $request)
     {
-        Log::info('Checking startup match with request:', $request->only(['country', 'industry']));
+        Log::info('Checking startup match with request data:', $request->only(['country', 'industry']));
+
         $validated = $request->validate([
             'country' => 'required|string',
             'industry' => 'required|string',
         ]);
 
+        $userId = Auth::id();
+        Log::info("Authenticated user ID: {$userId}");
+
         $match = Startup::where('country', $validated['country'])
-                        ->where('industry', $validated['industry'])
-                        ->first();
+            ->where('industry', $validated['industry'])
+            ->first();
 
         if ($match) {
-            return response()->json([
-                'found' => true,
-                'startup' => [
-                    'id' => $match->id,
-                    'name' => $match->title,
-                    'country' => $match->country,
-                    'industry' => $match->industry,
-                ]
+            // Save the match to the pivot table
+            InvestorStartupMatch::create([
+                'investor_id' => $userId,
+                'startup_id' => $match->id,
             ]);
-        } else {
-            return response()->json(['found' => false]);
         }
+
+        return response()->json([
+            'found' => (bool) $match,
+            'user_id' => $userId,
+            'startup' => $match ? [
+                'id' => $match->id,
+                'name' => $match->title,
+                'country' => $match->country,
+                'industry' => $match->industry,
+            ] : null,
+        ]);
     }
 
+    public function getInvestorNotifications()
+    {
+        $userId = Auth::id();
+        Log::info("Getting notifications for investor ID: {$userId}");
+
+        $matches = InvestorStartupMatch::with(['startup:id,title,country,industry'])
+                    ->where('investor_id', $userId)
+                    ->latest()
+                    ->get();
+
+        Log::info("Investor matches: " . $matches->toJson());
+
+        return response()->json($matches);
+    }
 
 }
