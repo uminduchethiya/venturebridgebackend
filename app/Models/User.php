@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        
+
         'email',
         'password',
         'company_name',
@@ -44,4 +44,19 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function packages()
+    {
+        return $this->belongsToMany(Package::class, 'package_user')
+            ->withPivot('remaining_posts')
+            ->withTimestamps();
+    }
+
+
 }

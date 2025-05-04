@@ -14,13 +14,12 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('payment_method');
+            $table->unsignedBigInteger('package_id');
             $table->decimal('amount', 10, 2);
-            $table->string('transaction_id')->unique();
-            $table->string('status')->default('success'); // success, failed, pending
+            $table->string('status')->default('success');
             $table->timestamps();
-
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
         });
     }
 
