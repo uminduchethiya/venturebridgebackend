@@ -57,6 +57,12 @@ class User extends Authenticatable
             ->withPivot('remaining_posts')
             ->withTimestamps();
     }
+    // For startup user
+    public function matchedInvestors()
+    {
+        return $this->hasMany(StartupToMatchInvestor::class, 'startup_user_id');
+    }
+
 
 
 }

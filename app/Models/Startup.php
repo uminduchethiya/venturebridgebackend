@@ -9,21 +9,21 @@ class Startup extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id',
-        'title',
         'founding_year',
         'country',
         'city',
-        'business_type',
-        'product_type',
-        'Industry',
+        'industry',
+        'sub_vertical',
+        'investment_type',
+        'price',
         'annual_revenue',
         'mrr',
-        'price',
         'employees_count',
         'linkedin_url',
         'facebook_url',
         'twitter_url',
+        'image',
+        'user_id',
     ];
 
     public function user()
