@@ -40,7 +40,7 @@ Route::get('/forgotpasswordindex', [AuthController::class, 'forgotPasswordIndex'
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 
 
-Route::middleware('auth:sanctum')->post('/startup', [StartupController::class, 'storeStartup']);
+
 Route::middleware('auth:sanctum')->post('/investor', [InvestorController::class, 'storeInvestor']);
 Route::middleware('auth:sanctum')->get('/users', [UserController::class, 'getUsersList']);
 Route::middleware('auth:sanctum')->get('/users', [UserController::class, 'getUsersList']);
@@ -76,3 +76,6 @@ Route::middleware('auth:sanctum')->post('/create-checkout-session', [StripeContr
 // Route::middleware('auth:sanctum')->get('/payment-success', [StripeController::class, 'paymentSuccess']);
 Route::get('/payment-success', [StripeController::class, 'paymentSuccess']);
 Route::middleware('auth:sanctum')->post('/create-checkout-session', [StripeController::class, 'createCheckoutSession']);
+
+Route::middleware('auth:sanctum')->post('/startups', [StartupController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/matched-investors', [StartupController::class, 'getMatchedInvestors']);
