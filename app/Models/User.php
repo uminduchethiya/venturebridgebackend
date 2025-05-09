@@ -63,6 +63,10 @@ class User extends Authenticatable
         return $this->hasMany(StartupToMatchInvestor::class, 'startup_user_id');
     }
 
+    public function investorProfile()
+    {
+        return $this->hasOne(Investor::class, 'user_id');
+    }
 
 
 }

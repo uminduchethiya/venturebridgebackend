@@ -24,12 +24,17 @@ class StartupToMatchInvestor extends Model
     // Define the relationship with the User model (investors)
     public function investor()
     {
-        return $this->belongsTo(User::class, 'matched_investor_id');
+        return $this->belongsTo(User::class, 'investor_user_id');
     }
 
     public function startupUser()
     {
         return $this->belongsTo(User::class, 'startup_user_id');
     }
+    public function documents()
+{
+    return $this->hasMany(StartupToMatchInvestorDocument::class, 'match_id');
+}
+
 
 }

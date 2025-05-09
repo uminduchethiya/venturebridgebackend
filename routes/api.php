@@ -79,3 +79,7 @@ Route::middleware('auth:sanctum')->post('/create-checkout-session', [StripeContr
 
 Route::middleware('auth:sanctum')->post('/startups', [StartupController::class, 'store']);
 Route::middleware('auth:sanctum')->get('/matched-investors', [StartupController::class, 'getMatchedInvestors']);
+Route::middleware('auth:sanctum')->post('/startup/documents', [DocumentController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/startup/documents', [DocumentController::class, 'getAllDocuments']);
+Route::middleware('auth:sanctum')->post('/startup/documents/update-status/{id}', [DocumentController::class, 'updateStatus']);
+Route::middleware('auth:sanctum')->delete('remove-matched-investor/{matchId}', [StartupController::class, 'removeMatchedInvestor']);

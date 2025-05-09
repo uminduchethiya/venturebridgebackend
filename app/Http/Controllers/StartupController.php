@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Startup;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Auth;
-use App\Models\StartupToMatchInvestor;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use App\Models\User;
+use App\Models\Startup;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use App\Models\StartupToMatchInvestor;
+use App\Models\StartupToMatchInvestorDocument;
+use Illuminate\Validation\ValidationException;
+
 class StartupController extends Controller
 {
     public function store(Request $request)
@@ -136,17 +138,89 @@ class StartupController extends Controller
             ], 403);
         }
 
-        $matchedInvestorIds = StartupToMatchInvestor::where('startup_user_id', $user->id)
-            ->pluck('investor_user_id');
+        try {
+            $matchedInvestors = StartupToMatchInvestor::where('startup_user_id', $user->id)
+                ->with(['investor.investorProfile', 'documents']) // Load user & investor info
+                ->get()
+                ->map(function ($match) {
+                    $approvedDocument = $match->documents->firstWhere('status', 'approved');
+                    $investor = $match->investor;
+                    $profile = $investor->investorProfile;
 
-        // Return full User records for investors
-        $matchedInvestors = User::whereIn('id', $matchedInvestorIds)
-            ->where('type', 'investor') // optional but safe
-            ->get();
+                    return [
+                        'match_id' => $match->id,
+                        'company_name' => $investor->company_name ?? 'N/A',
+                        'email' => $approvedDocument ? $investor->email : null,
+                        'investment_amount' => $profile?->investment_amount,
+                        'growth_rate' => $profile?->growth_rate,
+                        'annual_revenue' => $profile?->annual_revenue,
+                        'mrr' => $profile?->mrr,
+                    ];
+                });
 
-        return response()->json([
-            'matched_investors' => $matchedInvestors
-        ]);
+            return response()->json([
+                'matched_investors' => $matchedInvestors
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching matched investors for user ID: ' . $user->id, [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $user->id,
+                'request_params' => $request->all(),
+                'timestamp' => now(),
+                'url' => $request->url(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to load matched investors.'
+            ], 500);
+        }
     }
+
+    public function removeMatchedInvestor($matchId)
+    {
+        try {
+            // Find the match record by matchId
+            $match = StartupToMatchInvestor::findOrFail($matchId);
+
+            // Log the match and authenticated user
+            \Log::info('Removing match:', [
+                'match_id' => $match->id,
+                'startup_user_id' => $match->startup_user_id,
+                'authenticated_user_id' => Auth::id(),
+            ]);
+
+            // Check if the authenticated user is the startup associated with this match
+            if ($match->startup_user_id !== Auth::id()) {
+                return response()->json([
+                    'message' => 'You do not have permission to remove this match.'
+                ], 403);
+            }
+
+            // Delete the match record
+            $match->delete();
+
+            return response()->json([
+                'message' => 'Matched investor removed successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Error removing matched investor with ID ' . $matchId, [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'match_id' => $matchId,
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to remove matched investor.'
+            ], 500);
+        }
+    }
+
+
+
+
+
+
 
 }

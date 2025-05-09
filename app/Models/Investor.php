@@ -35,4 +35,9 @@ class Investor extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function userInfo()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
 }
