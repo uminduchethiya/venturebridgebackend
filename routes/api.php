@@ -83,3 +83,8 @@ Route::middleware('auth:sanctum')->post('/startup/documents', [DocumentControlle
 Route::middleware('auth:sanctum')->get('/startup/documents', [DocumentController::class, 'getAllDocuments']);
 Route::middleware('auth:sanctum')->post('/startup/documents/update-status/{id}', [DocumentController::class, 'updateStatus']);
 Route::middleware('auth:sanctum')->delete('remove-matched-investor/{matchId}', [StartupController::class, 'removeMatchedInvestor']);
+Route::middleware('auth:sanctum')->post('/investor/documents', [DocumentController::class, 'uploadDocuments']);
+Route::middleware('auth:sanctum')->get('/investor/get-all-documents', [DocumentController::class, 'investorGetAllDocuments']);
+Route::put('/investor/update-document-status/{id}', [DocumentController::class, 'investorDocumentStatusUpdate']);
+Route::middleware('auth:sanctum')->delete('/remove-matched-startup/{id}', [InvestorController::class, 'removeMatchedStartup']);
+Route::middleware('auth:sanctum')->delete('/posts/{id}', [PostController::class, 'destroy']);
