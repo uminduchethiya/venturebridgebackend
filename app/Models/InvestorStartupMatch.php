@@ -20,5 +20,9 @@ class InvestorStartupMatch extends Model
     {
         return $this->belongsTo(Startup::class, 'startup_id');
     }
+    public function documents()
+{
+    return $this->hasMany(InvestorStartupDocument::class, 'match_id');
+}
 
 }

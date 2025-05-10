@@ -112,14 +112,61 @@ class InvestorController extends Controller
         $userId = Auth::id();
         Log::info("Getting notifications for investor ID: {$userId}");
 
-        $matches = InvestorStartupMatch::with(['startup:id,title,country,industry'])
-                    ->where('investor_id', $userId)
-                    ->latest()
-                    ->get();
+        // Fetch the matches along with the related documents
+        $matches = InvestorStartupMatch::with([
+            'startup' => function ($query) {
+                $query->select('id', 'country', 'industry', 'user_id')
+                    ->with(['user:id,email,company_name']);
+            },
+            'documents' => function ($query) {
+                // Load the investor startup documents for each match
+                $query->select('match_id', 'status');
+            }
+        ])
+            ->where('investor_id', $userId)
+            ->latest()
+            ->get();
 
+        // Log the matches with their documents
         Log::info("Investor matches: " . $matches->toJson());
 
+        // Process the matches to filter out the email and company_name based on status
+        $matches->transform(function ($match) {
+            // Get the status of the related documents (if any)
+            $documentStatus = $match->documents->first()->status ?? null;
+
+            // Only include the email and company_name if the document status is "approved"
+            if ($documentStatus !== 'approved') {
+                // Hide email and company_name when status is not approved
+                unset($match->startup->user->email);
+                unset($match->startup->user->company_name);
+            }
+
+            return $match;
+        });
+
+        // Return the processed matches as JSON
         return response()->json($matches);
     }
+
+    public function removeMatchedStartup($id)
+    {
+        $userId = Auth::id();
+
+        // Find the match and ensure it belongs to the authenticated investor
+        $match = InvestorStartupMatch::where('id', $id)
+            ->where('investor_id', $userId)
+            ->first();
+
+        if (!$match) {
+            return response()->json(['message' => 'Match not found or unauthorized.'], 404);
+        }
+
+        $match->delete();
+
+        return response()->json(['message' => 'Match successfully removed.']);
+    }
+
+
 
 }
